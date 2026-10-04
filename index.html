@@ -2,13 +2,18 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0;url=https://streamingcommunityz.photos">
-  <title>Reindirizzamento...</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StreamingCommunity (No Ads)</title>
   <script>
-    window.location.replace("https://streamingcommunityz.photos");
+    // Disattiva la funzione window.open usata dai pop-up pubblicitari
+    window.open = function() { return null; };
   </script>
+  <style>
+    body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #0f172a; }
+    iframe { width: 100%; height: 100%; border: none; }
+  </style>
 </head>
 <body>
-  <p>Reindirizzamento in corso a <a href="https://streamingcommunityz.photos">https://streamingcommunityz.photos</a>...</p>
+  <iframe src="https://streamingcommunityz.photos" sandbox="allow-forms allow-scripts allow-same-origin allow-media" referrerpolicy="no-referrer"></iframe>
 </body>
 </html>

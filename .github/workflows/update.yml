@@ -26,20 +26,20 @@ jobs:
             echo "#LISTA CANALI VEEZIE" > canale.txt
             echo "https://$DOMAIN" >> canale.txt
 
-            # 2. Genera index.html ottimizzato con reindirizzamento pulito
+            # 2. Genera index.html con Reindirizzamento Diretto Istantaneo (NO IFRAME)
             echo '<!DOCTYPE html>' > index.html
             echo '<html lang="it">' >> index.html
             echo '<head>' >> index.html
             echo '  <meta charset="UTF-8">' >> index.html
+            echo '  <meta name="viewport" content="width=device-width, initial-scale=1.0">' >> index.html
             echo "  <meta http-equiv=\"refresh\" content=\"0;url=https://$DOMAIN\">" >> index.html
             echo '  <title>Reindirizzamento...</title>' >> index.html
             echo '  <script>' >> index.html
-            echo '    // Disabilita tentativi di apertura pop-up antecedenti' >> index.html
-            echo '    window.open = function() { return null; };' >> index.html
             echo "    window.location.replace(\"https://$DOMAIN\");" >> index.html
             echo '  </script>' >> index.html
             echo '  <style>' >> index.html
             echo '    body { font-family: system-ui, sans-serif; background: #0f172a; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }' >> index.html
+            echo '    a { color: #38bdf8; text-decoration: none; font-weight: bold; }' >> index.html
             echo '  </style>' >> index.html
             echo '</head>' >> index.html
             echo '<body>' >> index.html
@@ -56,4 +56,4 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add canale.txt index.html
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Fix iframe block and restore direct redirect" && git push)
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Remove iframe and enforce clean JS redirect" && git push)

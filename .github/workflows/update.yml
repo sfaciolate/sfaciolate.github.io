@@ -9,33 +9,44 @@ jobs:
   update-domain:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Concede i permessi di scrittura necessari per il commit/push
+      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Fetch Active Domain
         run: |
-          # Recupera il dominio attivo dal record TXT tramite l'API DoH di Google
-          DOMAIN=$(curl -s "https://dns.google/resolve?name=domain2.streamingcommunity.dev&type=TXT" | grep -oP '"data":"\K[^"]+' | head -n 1)
+          # 1. Recupera il dominio ponte dal DNS di Google
+          BRIDGE_DOMAIN=$(curl -s "https://dns.google/resolve?name=domain2.streamingcommunity.dev&type=TXT" | grep -oP '"data":"\K[^"]+' | head -n 1)
           
-          if [ -n "$DOMAIN" ]; then
-            echo "Dominio trovato: https://$DOMAIN"
+          if [ -n "$BRIDGE_DOMAIN" ]; then
+            echo "Dominio ponte trovato: https://$BRIDGE_DOMAIN"
 
-            # 1. Genera canale.txt (Formattato per liste Veezie)
+            # 2. Segue il reindirizzamento HTTP per trovare il dominio finale vero e proprio
+            FINAL_URL=$(curl -sIL -o /dev/null -w "%{url_effective}" "https://$BRIDGE_DOMAIN" | sed 's/\/$//')
+            
+            if [ -n "$FINAL_URL" ]; then
+              TARGET_URL="$FINAL_URL"
+            else
+              TARGET_URL="https://$BRIDGE_DOMAIN"
+            fi
+
+            echo "Dominio finale di destinazione: $TARGET_URL"
+
+            # 3. Genera canale.txt con il dominio finale (Formattato per liste Veezie)
             echo "#LISTA CANALI VEEZIE" > canale.txt
-            echo "https://$DOMAIN" >> canale.txt
+            echo "$TARGET_URL" >> canale.txt
 
-            # 2. Genera index.html con Reindirizzamento Diretto Istantaneo (NO IFRAME)
+            # 4. Genera index.html per reindirizzare direttamente al dominio finale
             echo '<!DOCTYPE html>' > index.html
             echo '<html lang="it">' >> index.html
             echo '<head>' >> index.html
             echo '  <meta charset="UTF-8">' >> index.html
             echo '  <meta name="viewport" content="width=device-width, initial-scale=1.0">' >> index.html
-            echo "  <meta http-equiv=\"refresh\" content=\"0;url=https://$DOMAIN\">" >> index.html
+            echo "  <meta http-equiv=\"refresh\" content=\"0;url=$TARGET_URL\">" >> index.html
             echo '  <title>Reindirizzamento...</title>' >> index.html
             echo '  <script>' >> index.html
-            echo "    window.location.replace(\"https://$DOMAIN\");" >> index.html
+            echo "    window.location.replace(\"$TARGET_URL\");" >> index.html
             echo '  </script>' >> index.html
             echo '  <style>' >> index.html
             echo '    body { font-family: system-ui, sans-serif; background: #0f172a; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }' >> index.html
@@ -43,7 +54,7 @@ jobs:
             echo '  </style>' >> index.html
             echo '</head>' >> index.html
             echo '<body>' >> index.html
-            echo "  <p>Reindirizzamento a <a href=\"https://$DOMAIN\">https://$DOMAIN</a>...</p>" >> index.html
+            echo "  <p>Reindirizzamento a <a href=\"$TARGET_URL\">$TARGET_URL</a>...</p>" >> index.html
             echo '</body>' >> index.html
             echo '</html>' >> index.html
           else
@@ -56,4 +67,4 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add canale.txt index.html
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Remove iframe and enforce clean JS redirect" && git push)
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Resolve final redirected domain" && git push)

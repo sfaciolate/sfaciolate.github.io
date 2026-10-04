@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reindirizzamento...</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .card {
+            text-align: center;
+            padding: 2rem;
+            background: #1e293b;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .spinner {
+            border: 4px solid rgba(255,255,255,0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #38bdf8;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="spinner"></div>
+        <p id="status">Ricerca del dominio attivo in corso...</p>
+    </div>
+
+    <script>
+        async function getActiveDomain() {
+            const statusEl = document.getElementById('status');
+            try {
+                // Interroga l'API DoH di Google per leggere il record TXT
+                const response = await fetch('https://dns.google/resolve?name=domain2.streamingcommunity.dev&type=TXT');
+                const data = await response.json();
+
+                if (data.Answer && data.Answer.length > 0) {
+                    const domain = data.Answer[0].data;
+                    statusEl.innerText = "Reindirizzamento a " + domain + "...";
+                    window.location.replace("https://" + domain);
+                } else {
+                    statusEl.innerText = "Impossibile recuperare il dominio attivo.";
+                }
+            } catch (err) {
+                console.error(err);
+                statusEl.innerText = "Errore durante la connessione al DNS.";
+            }
+        }
+
+        getActiveDomain();
+    </script>
+</body>
+</html>

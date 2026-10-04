@@ -26,23 +26,21 @@ jobs:
             echo "#LISTA CANALI VEEZIE" > canale.txt
             echo "https://$DOMAIN" >> canale.txt
 
-            # 2. Genera index.html (Redirect lato client + Meta Refresh per browser e player)
-            cat <<EOF > index.html
-<!DOCTYPE html>
-<html lang="it">
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0;url=https://$DOMAIN">
-  <title>Reindirizzamento...</title>
-  <script>
-    window.location.replace("https://$DOMAIN");
-  </script>
-</head>
-<body>
-  <p>Reindirizzamento in corso a <a href="https://$DOMAIN">https://$DOMAIN</a>...</p>
-</body>
-</html>
-EOF
+            # 2. Genera index.html con Meta Refresh + JS Redirect
+            echo '<!DOCTYPE html>' > index.html
+            echo '<html lang="it">' >> index.html
+            echo '<head>' >> index.html
+            echo '  <meta charset="UTF-8">' >> index.html
+            echo "  <meta http-equiv=\"refresh\" content=\"0;url=https://$DOMAIN\">" >> index.html
+            echo '  <title>Reindirizzamento...</title>' >> index.html
+            echo '  <script>' >> index.html
+            echo "    window.location.replace(\"https://$DOMAIN\");" >> index.html
+            echo '  </script>' >> index.html
+            echo '</head>' >> index.html
+            echo '<body>' >> index.html
+            echo "  <p>Reindirizzamento in corso a <a href=\"https://$DOMAIN\">https://$DOMAIN</a>...</p>" >> index.html
+            echo '</body>' >> index.html
+            echo '</html>' >> index.html
           else
             echo "Errore: Impossibile recuperare il dominio attivo."
             exit 1

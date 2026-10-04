@@ -26,19 +26,24 @@ jobs:
             echo "#LISTA CANALI VEEZIE" > canale.txt
             echo "https://$DOMAIN" >> canale.txt
 
-            # 2. Genera index.html con Meta Refresh + JS Redirect
+            # 2. Genera index.html con blocco Pop-up e AdBlock integrato
             echo '<!DOCTYPE html>' > index.html
             echo '<html lang="it">' >> index.html
             echo '<head>' >> index.html
             echo '  <meta charset="UTF-8">' >> index.html
-            echo "  <meta http-equiv=\"refresh\" content=\"0;url=https://$DOMAIN\">" >> index.html
-            echo '  <title>Reindirizzamento...</title>' >> index.html
+            echo '  <meta name="viewport" content="width=device-width, initial-scale=1.0">' >> index.html
+            echo '  <title>StreamingCommunity (No Ads)</title>' >> index.html
             echo '  <script>' >> index.html
-            echo "    window.location.replace(\"https://$DOMAIN\");" >> index.html
+            echo '    // Disattiva la funzione window.open usata dai pop-up pubblicitari' >> index.html
+            echo '    window.open = function() { return null; };' >> index.html
             echo '  </script>' >> index.html
+            echo '  <style>' >> index.html
+            echo '    body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #0f172a; }' >> index.html
+            echo '    iframe { width: 100%; height: 100%; border: none; }' >> index.html
+            echo '  </style>' >> index.html
             echo '</head>' >> index.html
             echo '<body>' >> index.html
-            echo "  <p>Reindirizzamento in corso a <a href=\"https://$DOMAIN\">https://$DOMAIN</a>...</p>" >> index.html
+            echo "  <iframe src=\"https://$DOMAIN\" sandbox=\"allow-forms allow-scripts allow-same-origin allow-media\" referrerpolicy=\"no-referrer\"></iframe>" >> index.html
             echo '</body>' >> index.html
             echo '</html>' >> index.html
           else
@@ -51,4 +56,4 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add canale.txt index.html
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Update active domain and redirect page" && git push)
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update active domain with AdBlock iframe" && git push)

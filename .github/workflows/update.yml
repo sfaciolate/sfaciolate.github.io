@@ -2,25 +2,55 @@ name: Update Active Domain
 
 on:
   schedule:
-    - cron: '0 * * * *' # Viene eseguito ogni ora
-  workflow_dispatch: # Permette l'esecuzione manuale
+    - cron: '0 * * * *' # Esegue l'aggiornamento automatico ogni ora
+  workflow_dispatch: # Permette di avviare il flusso manualmente da GitHub
 
 jobs:
   update-domain:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # Concede i permessi di scrittura necessari per il commit/push
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
       - name: Fetch Active Domain
         run: |
-          DOMAIN=$(curl -s "https://dns.google/resolve?name=domain2.streamingcommunity.dev&type=TXT" | jq -r '.Answer[0].data // empty')
+          # Recupera il dominio attivo dal record TXT tramite l'API DoH di Google
+          DOMAIN=$(curl -s "https://dns.google/resolve?name=domain2.streamingcommunity.dev&type=TXT" | grep -oP '"data":"\K[^"]+' | head -n 1)
+          
           if [ -n "$DOMAIN" ]; then
-            echo "https://$DOMAIN" > canale.txt
+            echo "Dominio trovato: https://$DOMAIN"
+
+            # 1. Genera canale.txt (Formattato per liste Veezie)
+            echo "#LISTA CANALI VEEZIE" > canale.txt
+            echo "https://$DOMAIN" >> canale.txt
+
+            # 2. Genera index.html (Redirect lato client + Meta Refresh per browser e player)
+            cat <<EOF > index.html
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="0;url=https://$DOMAIN">
+  <title>Reindirizzamento...</title>
+  <script>
+    window.location.replace("https://$DOMAIN");
+  </script>
+</head>
+<body>
+  <p>Reindirizzamento in corso a <a href="https://$DOMAIN">https://$DOMAIN</a>...</p>
+</body>
+</html>
+EOF
+          else
+            echo "Errore: Impossibile recuperare il dominio attivo."
+            exit 1
           fi
 
       - name: Commit and Push
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add canale.txt
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Update active domain" && git push)
+          git add canale.txt index.html
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update active domain and redirect page" && git push)
